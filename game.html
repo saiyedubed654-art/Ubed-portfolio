@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PRO Car Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<style>
+body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden}
+canvas{background:linear-gradient(#333,#000);border:3px solid cyan;border-radius:15px;box-shadow:0 0 30px cyan}
+#btns{position:absolute;bottom:30px;display:flex;gap:60px}
+button{width:90px;height:90px;font-size:45px;border-radius:50%;border:3px solid cyan;background:#000;color:cyan}
+#info{position:absolute;top:20px;color:cyan;font-size:22px;font-weight:bold}
+#gameover{position:absolute;color:red;font-size:45px;font-weight:bold;display:none;text-align:center}
+#back{position:absolute;top:20px;left:20px;background:cyan;color:black;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:bold}
+</style>
+</head>
+<body>
+<a id="back" href="index.html">← Back</a>
+<div id="info">Score: 0 | Level: 1</div>
+<canvas id="game" width="320" height="650"></canvas>
+<div id="btns">
+  <button id="left">←</button>
+  <button id="right">→</button>
+</div>
+<div id="gameover">GAME OVER<br><span style="font-size:22px;color:white">Reload karo</span></div>
+
+<audio id="crash" src="https://www.soundjay.com/mechanical/sounds/car-crash-4.mp3"></audio>
+<audio id="bg" src="https://www.soundjay.com/misc/sounds/arcade-music-loop-1.mp3" loop></audio>
+
+<script>
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+let carX=140, score=0, level=1, gameOver=false;
+let enemyX=140, enemyY=-100, speed=4;
+let particles=[];
+
+const crash=document.getElementById('crash');
+const bg=document.getElementById('bg');
+bg.volume=0.2;
+bg.play().catch(()=>{});
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft' && carX>15) carX-=25;
+  if(e.key==='ArrowRight' && carX<265) carX+=25;
+});
+document.getElementById('left').ontouchstart=()=>{if(carX>15) carX-=25;};
+document.getElementById('right').ontouchstart=()=>{if(carX<265) carX+=25;};
+
+function boom(x,y){
+  for(let i=0;i<25;i++){
+    particles.push({x:x+20,y:y+35,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:40,color:`hsl(${Math.random()*60},100%,60%)`});
+  }
+}
+
+function updateParticles(){
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.life--;
+    ctx.fillStyle=p.color;
+    ctx.globalAlpha=p.life/40;
+    ctx.beginPath(); ctx.arc(p.x,p.y,3,0,6.28); ctx.fill();
+  });
+  particles=particles.filter(p=>p.life>0);
+  ctx.globalAlpha=1;
+}
+
+function draw(){
+  if(gameOver) return;
+  ctx.clearRect(0,0,320,650);
+  ctx.fillStyle='#fff';
+  for(let i=0;i<650;i+=50) ctx.fillRect(155,i-score%50,10,25);
+  ctx.shadowBlur=15; ctx.shadowColor='red';
+  ctx.fillStyle='red'; ctx.fillRect(carX,550,40,80);
+  ctx.shadowBlur=0;
+  enemyY+=speed;
+  if(enemyY>650){
+    enemyY=-100; 
+    enemyX=Math.random()*270+15; 
+    score++;
+    if(score%5==0){level++; speed+=1.5;}
+  }
+  ctx.shadowBlur=15; ctx.shadowColor='yellow';
+  ctx.fillStyle='yellow'; ctx.fillRect(enemyX,enemyY,40,80);
+  ctx.shadowBlur=0;
+  updateParticles();
+  if(carX<enemyX+40 && carX+40>enemyX && 550<enemyY+80 && 550+80>enemyY){
+    gameOver=true; boom(enemyX,enemyY); crash.play(); bg.pause();
+    document.getElementById('gameover').style.display='block';
+  }
+  document.getElementById('info').innerText=`Score: ${score} | Level: ${level}`;
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
