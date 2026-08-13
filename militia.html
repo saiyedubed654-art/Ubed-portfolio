@@ -4,35 +4,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 </head>
 <body style="margin:0;overflow:hidden;background:linear-gradient(to bottom, #87CEEB 0%, #228B22 100%);height:100vh">
-<div style="position:absolute;top:10px;left:10px;color:white;font-size:18px;font-weight:bold;text-shadow:1px 1px 2px black" id="s">P1: 0 | P2: 0</div>
-<div style="position:absolute;top:10px;right:10px;color:white;font-size:14px;font-weight:bold;text-shadow:1px 1px 2px black" id="h">P1 HP:100 P2 HP:100</div>
+<div style="position:absolute;top:10px;left:10px;color:white;font-size:18px;font-weight:bold;text-shadow:2px 2px 4px black" id="s">P1: 0 | P2: 0</div>
+<div style="position:absolute;top:10px;right:10px;color:white;font-size:14px;font-weight:bold;text-shadow:2px 2px 4px black" id="h">P1 HP:100 P2 HP:100</div>
 
-<!-- PLAYER 1 Orange -->
 <div id="p1" style="position:absolute;width:30px;height:40px;background:orange;border:2px solid white;left:50px;top:300px"></div>
-<!-- PLAYER 2 Cyan -->
 <div id="p2" style="position:absolute;width:30px;height:40px;background:cyan;border:2px solid white;left:100px;top:300px"></div>
 
-<!-- P1 CONTROLS -->
 <button onmousedown="p1up()" onmouseup="p1down()" ontouchstart="p1up()" ontouchend="p1down()" style="position:absolute;left:10px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🚀</button>
 <button onclick="p1fire()" style="position:absolute;left:80px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🔫</button>
 <button onclick="p1bomb()" style="position:absolute;left:10px;bottom:50px;width:60px;height:60px;border-radius:50%;background:red;color:white;border:2px solid white;font-size:20px">💣</button>
 
-<!-- P2 CONTROLS -->
 <button onmousedown="p2up()" onmouseup="p2down()" ontouchstart="p2up()" ontouchend="p2down()" style="position:absolute;right:80px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🚀</button>
 <button onclick="p2fire()" style="position:absolute;right:10px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🔫</button>
 <button onclick="p2bomb()" style="position:absolute;right:10px;bottom:50px;width:60px;height:60px;border-radius:50%;background:red;color:white;border:2px solid white;font-size:20px">💣</button>
 
 <script>
 let s1=0,s2=0,hp1=100,hp2=100;
-let py1=300,py2=300,vy1=3,vy2=3,speed=5;
+let py1=300,py2=300,vy1=3,vy2=3,speed=5,spawnTimer=0;
 let b=[],e=[],bomb=[];
 
-// CONTROLS
 function p1up(){vy1=-10} function p1down(){vy1=3} function p1fire(){b.push({x:80,y:py1+15,by:'p1'})} function p1bomb(){bomb.push({x:80,y:py1+15,by:'p1'})}
 function p2up(){vy2=-10} function p2down(){vy2=3} function p2fire(){b.push({x:130,y:py2+15,by:'p2'})} function p2bomb(){bomb.push({x:130,y:py2+15,by:'p2'})}
 
 function takkar(a,b){return a.x<b.x+30&&a.x+30>b.x&&a.y<b.y+40&&a.y+40>b.y}
 
 setInterval(()=>{
-// Player move
-py1+=vy1;py2+=vy2;
+py1+=vy1;py2+=vy2; 
+if(py1>window.innerHeight-50)py1=window.innerHeight-50; if(py1<0)py1=0; 
+if(py2>window.innerHeight-50)py2=window.innerHeight-50; if(py2<0)py2=0;
+p1.style.top=py1+'px'; p2.style.top=py2+'px';
+
+let total=s1+s2;
+if(total>0 && total%50==0){ speed=5 + Math.floor(total/50); }
+
+b.forEach(x=>x.x+=12); b=b.filter(x=>x.x<window.innerWidth);
+bomb.forEach(x=>x.x+=8); bomb=bomb.filter(x=>x.x<window.innerWidth);
+
+spawnTimer++;
+if(spawnTimer>30){ e.push({x:window.innerWidth,y:Math.random()*(window.innerHeight-100)+50}); spawnTimer=0; }
+e.forEach(x=>x.x-=speed);
+
+for(let i=e.length-1;i>=0;i--){
+  for(let j=b.length-1;j>=0;j--){
+    if(takkar(b[j],e[i])){
+      e.splice(i,1); b.splice(j,1);
+      if(b[j] && b[j].by=='p1'){s1+=10}else{s2+=10};
+      document.getElementById('s').innerText='P1: '+s1+' | P2: '+s2;
+      break;
+    }
+  }
+}
+
+for(let i=bomb.length-1;i>=0;i--){
+  for(let j=e.length-1;j>=0;j--){
+    if(Math.abs(bomb[i].x-e[j].x)<70 && Math.abs(bomb[i].y-e[j].y)<70){
+      e.splice(j,1);
+      if(bomb[i].by=='p1'){s1+=20}else{s2+=20};
+      document.getElementById('s').innerText='P1: '+s1+' | P2: '+s2;
+    }
+  }
+  bomb.splice(i,1);
+}
+
+for(let i=e.length-1;i>=0;i--){
+  if(takkar({x:50,y:py1},e[i])){e.splice(i,1);hp1-=25;if(hp1<=0){alert('P2 WINS! P1:'+s1+' P2:'+s2);location.reload()}}
+  if(takkar({x:100,y:py2},e[i])){e.splice(i,1);hp2-=25;if(hp2<=0){alert('P1 WINS! P1:'+s1+' P2:'+s2);location.reload()}}
+}
+e=e.filter(x=>x.x
