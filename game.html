@@ -1,15 +1,14 @@
  <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Car Game</title>
+<title>Game</title>
 <style>
-body{margin:0;background:#000;overflow:hidden}
-#back{position:absolute;top:10px;left:10px;z-index:100;background:#00ffff;color:#000;padding:10px;text-decoration:none;border-radius:5px;font-weight:bold}
-canvas{display:block;margin:60px auto 0;border:2px solid cyan}
-#btns{position:absolute;bottom:20px;width:100%;text-align:center}
-button{width:80px;height:80px;margin:0 20px;font-size:30px;border-radius:50%;background:#222;color:cyan;border:2px solid cyan}
+body{margin:0;background:black;overflow:hidden;-webkit-user-select:none;user-select:none}
+#back{position:absolute;top:10px;left:10px;z-index:999;background:cyan;color:black;padding:10px;border-radius:5px;text-decoration:none;font-weight:bold}
+canvas{display:block;margin:70px auto 0;border:2px solid cyan;background:#111}
+#btns{position:absolute;bottom:30px;width:100%;text-align:center}
+button{width:80px;height:80px;margin:0 25px;font-size:35px;border-radius:50%;background:#222;color:cyan;border:2px solid cyan}
 </style>
 </head>
 <body>
@@ -21,72 +20,58 @@ button{width:80px;height:80px;margin:0 20px;font-size:30px;border-radius:50%;bac
 </div>
 
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var playerX = 130;
+var score = 0;
+var cars = [{x:60, y:-100, t:1}, {x:200, y:-300, t:2}];
 
-let playerX = 130;
-let score = 0;
-let cars = [
-  {x:60, y:-100, type:'police'},
-  {x:200, y:-300, type:'normal'}
-];
-
-function drawPlayer() {
-  ctx.fillStyle = 'red';
-  ctx.fillRect(playerX, 420, 40, 80);
-}
-
-function drawCar(car) {
-  if(car.type === 'police'){
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(car.x, car.y, 40, 80);
-    ctx.fillStyle = 'white';
-    ctx.font = '14px Arial';
-    ctx.fillText('POLICE', car.x + 3, car.y + 50);
-  } else {
-    ctx.fillStyle = 'yellow';
-    ctx.fillRect(car.x, car.y, 40, 80);
-  }
-}
-
-function update() {
+function draw() {
   ctx.clearRect(0,0,300,500);
 
-  // Road
+  // road line
   ctx.fillStyle = 'white';
-  for(let i=0; i<500; i+=40){
+  for(var i=0; i<500; i+=40){
     ctx.fillRect(145, i, 10, 20);
   }
 
-  drawPlayer();
+  // player car red
+  ctx.fillStyle = 'red';
+  ctx.fillRect(playerX, 420, 40, 80);
 
-  for(let i=0; i<cars.length; i++){
-    cars[i].y += 4;
+  // enemy cars
+  for(var i=0; i<2; i++){
+    cars[i].y = cars[i].y + 4;
     if(cars[i].y > 500){
       cars[i].y = -100;
       cars[i].x = Math.random() * 260;
       score++;
     }
-    drawCar(cars[i]);
 
-    // Collision
+    if(cars[i].t == 1){
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(cars[i].x, cars[i].y, 40, 80);
+      ctx.fillStyle = 'white';
+      ctx.font = '14px Arial';
+      ctx.fillText('POLICE', cars[i].x + 5, cars[i].y + 50);
+    } else {
+      ctx.fillStyle = 'yellow';
+      ctx.fillRect(cars[i].x, cars[i].y, 40, 80);
+    }
+
+    // takkar
     if(playerX < cars[i].x + 40 && playerX + 40 > cars[i].x && 420 < cars[i].y + 80 && 420 + 80 > cars[i].y){
       alert('Game Over! Score: ' + score);
       location.reload();
     }
   }
-  requestAnimationFrame(update);
+  requestAnimationFrame(draw);
 }
 
-// Controls
-document.getElementById('left').onclick = () => { playerX -= 20; }
-document.getElementById('right').onclick = () => { playerX += 20; }
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'ArrowLeft') playerX -= 20;
-  if(e.key === 'ArrowRight') playerX += 20;
-});
+document.getElementById('left').onclick = function(){ if(playerX > 10) playerX = playerX - 25; }
+document.getElementById('right').onclick = function(){ if(playerX < 250) playerX = playerX + 25; }
 
-update();
+draw();
 </script>
 </body>
 </html>
