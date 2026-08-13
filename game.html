@@ -1,63 +1,92 @@
  <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Realistic Car Game</title>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Game</title>
 <style>
-body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;font-family:Arial}
-canvas{background:#1a1a1a;border:3px solid #00ffff;border-radius:15px;margin-top:60px}
-#btns{position:absolute;bottom:30px;display:flex;gap:40px}
-button{width:90px;height:90px;font-size:40px;border-radius:50%;background:#111;color:#00ffff;border:3px solid #00ffff;box-shadow:0 0 10px #00ffff}
-#back{position:absolute;top:15px;left:15px;background:#00ffff;color:#000;padding:12px 18px;text-decoration:none;border-radius:10px;z-index:99;font-weight:bold}
-#info{position:absolute;top:15px;width:100%;text-align:center;color:#00ffff;font-size:20px;font-weight:bold}
+body{margin:0;background:#000;overflow:hidden}
+#back{position:absolute;top:10px;left:10px;z-index:100;background:#00ffff;color:#000;padding:10px;text-decoration:none;border-radius:5px;font-weight:bold}
+canvas{display:block;margin:60px auto 0;border:2px solid cyan}
+#btns{position:absolute;bottom:20px;width:100%;text-align:center}
+button{width:80px;height:80px;margin:0 20px;font-size:30px;border-radius:50%;background:#222;color:cyan;border:2px solid cyan}
 </style>
 </head>
 <body>
-<a id="back" href="index.html">← Back</a>
-<div id="info" onclick="startAudio()">TAP HERE TO START SOUND<br>Score: 0</div>
-<canvas id="g" width="340" height="560"></canvas>
-<div id="btns"><button id="l">←</button><button id="r">→</button></div>
+<a id="back" href="index.html">Back</a>
+<canvas id="game" width="300" height="500"></canvas>
+<div id="btns">
+<button id="left">←</button>
+<button id="right">→</button>
+</div>
 
 <script>
-let c=document.getElementById('g').getContext('2d'),x=150,y=480,ex=[70,210],ey=[-120,-320],type=['police','normal'],s=0,audioCtx=null;
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
 
-function startAudio(){
-  if(!audioCtx){
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    document.getElementById('info').innerHTML=`Sound ON<br>Score: ${s}`;
+let playerX = 130;
+let score = 0;
+let cars = [
+  {x:60, y:-100, type:'police'},
+  {x:200, y:-300, type:'normal'}
+];
+
+function drawPlayer() {
+  ctx.fillStyle = 'red';
+  ctx.fillRect(playerX, 420, 40, 80);
+}
+
+function drawCar(car) {
+  if(car.type === 'police'){
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(car.x, car.y, 40, 80);
+    ctx.fillStyle = 'white';
+    ctx.font = '14px Arial';
+    ctx.fillText('POLICE', car.x + 3, car.y + 50);
+  } else {
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(car.x, car.y, 40, 80);
   }
 }
-function playSound(freq,time){
-  if(!audioCtx) return;
-  let o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.connect(g);g.connect(audioCtx.destination);
-  o.frequency.value=freq;g.gain.setValueAtTime(0.2,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+time);
-  o.start();o.stop(audioCtx.currentTime+time);
-}
 
-document.getElementById('l').ontouchstart=()=>{x=Math.max(10,x-30);};
-document.getElementById('r').ontouchstart=()=>{x=Math.min(280,x+30);};
-document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')x=Math.max(10,x-30);if(e.key==='ArrowRight')x=Math.min(280,x+30);});
+function update() {
+  ctx.clearRect(0,0,300,500);
 
-// REALISTIC CAR
-function drawCar(x,y,type){
-  c.shadowColor="#000";c.shadowBlur=10;
-  if(type=='police'){
-    // Police SUV
-    c.fillStyle='#0a2aff';c.fillRect(x+10,y+15,30,50); // body
-    c.fillStyle='#000';c.fillRect(x+5,y+65,40,10); // bumper
-    c.fillStyle='white';c.fillRect(x+15,y+20,10,8); // window
-    c.fillStyle='red';c.fillRect(x+18,y+5,14,8); // light bar
-    c.fillStyle='white';c.font='bold 9px Arial';c.fillText('POLICE',x+14,y+45);
-  }else{
-    // Yellow Sports Car
-    c.fillStyle='#ffd700';c.fillRect(x+10,y+20,30,45); // body
-    c.fillStyle='#000';c.fillRect(x+5,y+65,40,10); // bumper
-    c.fillStyle='#333';c.fillRect(x+15,y+25,10,8); // window
-    c.fillStyle='orange';c.fillRect(x+12,y+18,6,4);c.fillRect(x+32,y+18,6,4); // headlights
+  // Road
+  ctx.fillStyle = 'white';
+  for(let i=0; i<500; i+=40){
+    ctx.fillRect(145, i, 10, 20);
   }
-  c.shadowBlur=0;
+
+  drawPlayer();
+
+  for(let i=0; i<cars.length; i++){
+    cars[i].y += 4;
+    if(cars[i].y > 500){
+      cars[i].y = -100;
+      cars[i].x = Math.random() * 260;
+      score++;
+    }
+    drawCar(cars[i]);
+
+    // Collision
+    if(playerX < cars[i].x + 40 && playerX + 40 > cars[i].x && 420 < cars[i].y + 80 && 420 + 80 > cars[i].y){
+      alert('Game Over! Score: ' + score);
+      location.reload();
+    }
+  }
+  requestAnimationFrame(update);
 }
-function drawPlayerCar(x,y){
-  c.shadowColor="#ff0000";
+
+// Controls
+document.getElementById('left').onclick = () => { playerX -= 20; }
+document.getElementById('right').onclick = () => { playerX += 20; }
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'ArrowLeft') playerX -= 20;
+  if(e.key === 'ArrowRight') playerX += 20;
+});
+
+update();
+</script>
+</body>
+</html>
