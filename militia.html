@@ -1,23 +1,38 @@
 <!DOCTYPE html>
 <html>
-<body style="margin:0;overflow:hidden;background:linear-gradient(#87CEEB,#228B22)">
-<div style="position:absolute;top:10px;left:10px;color:white;font-size:20px" id="s">P1: 0 | P2: 0</div>
-<div style="position:absolute;top:10px;right:10px;color:white;font-size:16px" id="h">P1 HP:100 P2 HP:100</div>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+</head>
+<body style="margin:0;overflow:hidden;background:linear-gradient(to bottom, #87CEEB 0%, #228B22 100%);height:100vh">
+<div style="position:absolute;top:10px;left:10px;color:white;font-size:18px;font-weight:bold;text-shadow:1px 1px 2px black" id="s">P1: 0 | P2: 0</div>
+<div style="position:absolute;top:10px;right:10px;color:white;font-size:14px;font-weight:bold;text-shadow:1px 1px 2px black" id="h">P1 HP:100 P2 HP:100</div>
 
-<!-- PLAYER 1 -->
-<div id="p1" style="position:absolute;width:30px;height:40px;background:orange;left:50px;top:300px"></div>
-<!-- PLAYER 2 -->
-<div id="p2" style="position:absolute;width:30px;height:40px;background:cyan;left:100px;top:300px"></div>
+<!-- PLAYER 1 Orange -->
+<div id="p1" style="position:absolute;width:30px;height:40px;background:orange;border:2px solid white;left:50px;top:300px"></div>
+<!-- PLAYER 2 Cyan -->
+<div id="p2" style="position:absolute;width:30px;height:40px;background:cyan;border:2px solid white;left:100px;top:300px"></div>
 
-<!-- CONTROLS P1 -->
-<button onmousedown="p1up()" onmouseup="p1down()" ontouchstart="p1up()" ontouchend="p1down()" style="position:absolute;left:10px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white">🚀</button>
-<button onclick="p1fire()" style="position:absolute;left:80px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white">🔫</button>
-<button onclick="p1bomb()" style="position:absolute;left:10px;bottom:50px;width:60px;height:60px;border-radius:50%;background:red;color:white">💣</button>
+<!-- P1 CONTROLS -->
+<button onmousedown="p1up()" onmouseup="p1down()" ontouchstart="p1up()" ontouchend="p1down()" style="position:absolute;left:10px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🚀</button>
+<button onclick="p1fire()" style="position:absolute;left:80px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🔫</button>
+<button onclick="p1bomb()" style="position:absolute;left:10px;bottom:50px;width:60px;height:60px;border-radius:50%;background:red;color:white;border:2px solid white;font-size:20px">💣</button>
 
-<!-- CONTROLS P2 -->
-<button onmousedown="p2up()" onmouseup="p2down()" ontouchstart="p2up()" ontouchend="p2down()" style="position:absolute;right:80px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white">🚀</button>
-<button onclick="p2fire()" style="position:absolute;right:10px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white">🔫</button>
-<button onclick="p2bomb()" style="position:absolute;right:10px;bottom:50px;width:60px;height:60px;border-radius:50%;background:red;color:white">💣</button>
+<!-- P2 CONTROLS -->
+<button onmousedown="p2up()" onmouseup="p2down()" ontouchstart="p2up()" ontouchend="p2down()" style="position:absolute;right:80px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🚀</button>
+<button onclick="p2fire()" style="position:absolute;right:10px;bottom:120px;width:60px;height:60px;border-radius:50%;background:#222;color:white;border:2px solid white;font-size:20px">🔫</button>
+<button onclick="p2bomb()" style="position:absolute;right:10px;bottom:50px;width:60px;height:60px;border-radius:50%;background:red;color:white;border:2px solid white;font-size:20px">💣</button>
 
 <script>
-let s1=0,s2=0
+let s1=0,s2=0,hp1=100,hp2=100;
+let py1=300,py2=300,vy1=3,vy2=3,speed=5;
+let b=[],e=[],bomb=[];
+
+// CONTROLS
+function p1up(){vy1=-10} function p1down(){vy1=3} function p1fire(){b.push({x:80,y:py1+15,by:'p1'})} function p1bomb(){bomb.push({x:80,y:py1+15,by:'p1'})}
+function p2up(){vy2=-10} function p2down(){vy2=3} function p2fire(){b.push({x:130,y:py2+15,by:'p2'})} function p2bomb(){bomb.push({x:130,y:py2+15,by:'p2'})}
+
+function takkar(a,b){return a.x<b.x+30&&a.x+30>b.x&&a.y<b.y+40&&a.y+40>b.y}
+
+setInterval(()=>{
+// Player move
+py1+=vy1;py2+=vy2;
