@@ -62,7 +62,9 @@ function draw() {
     // takkar
     if(playerX < cars[i].x + 40 && playerX + 40 > cars[i].x && 420 < cars[i].y + 80 && 420 + 80 > cars[i].y){
       alert('Game Over! Score: ' + score);
-      location.reload();
+score = 0;
+cars[0].y = -100; cars[0].x = Math.random() * 260;
+cars[1].y = -300; cars[1].x = Math.random() * 260;
     }
   }
   requestAnimationFrame(draw);
