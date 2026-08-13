@@ -4,20 +4,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mini Militia</title>
 <style>
-body{margin:0;background:#000;overflow:hidden}
+body{margin:0;background:#000;overflow:hidden;font-family:sans-serif}
 #game{width:100%;height:100vh;background:linear-gradient(#87CEEB,#228B22);position:relative}
-#score{position:absolute;top:10px;left:10px;color:white;font-size:24px;font-weight:bold;z-index:10}
-.player{position:absolute;width:30px;height:40px;background:orange;z-index:5}
-.enemy{position:absolute;width:30px;height:40px;background:red;z-index:5}
-.bullet{position:absolute;width:10px;height:5px;background:yellow;z-index:4}
-.btn{position:absolute;bottom:30px;width:70px;height:70px;background:#222;color:white;border:none;border-radius:50%;font-size:24px}
+#score{position:absolute;top:10px;left:10px;color:white;font-size:22px;font-weight:bold}
+#hp{position:absolute;top:10px;right:10px;color:lime;font-size:22px;font-weight:bold}
+.player{position:absolute;width:30px;height:40px;background:orange;border:2px solid #fff}
+.enemy{position:absolute;width:30px;height:40px;background:red;border:2px solid #fff}
+.bullet{position:absolute;width:12px;height:6px;background:yellow;box-shadow:0 0 5px yellow}
+.btn{position:absolute;bottom:30px;width:70px;height:70px;background:#222;color:white;border:none;border-radius:50%;font-size:26px}
 #fire{right:30px}
 #jet{left:30px}
+#over{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-size:40px;display:none}
 </style>
 </head>
 <body>
 <div id="game">
   <div id="score">Score: 0</div>
+  <div id="hp">HP: 100</div>
+  <div id="over">GAME OVER</div>
   <div class="player" id="player"></div>
   <button class="btn" id="jet">🚀</button>
   <button class="btn" id="fire">🔫</button>
@@ -25,52 +29,34 @@ body{margin:0;background:#000;overflow:hidden}
 <script>
 let player=document.getElementById('player');
 let scoreEl=document.getElementById('score');
-let score=0, px=80, py=300, vy=3;
+let hpEl=document.getElementById('hp');
+let overEl=document.getElementById('over');
+
+let score=0, hp=100, px=80, py=300, vy=3, gameOver=false;
 let bullets=[], enemies=[];
 
 player.style.left=px+'px'; player.style.top=py+'px';
 
 // Controls
-document.getElementById('jet').ontouchstart=()=>{vy=-10;}
-document.getElementById('jet').ontouchend=()=>{vy=3;}
-document.getElementById('fire').onclick=()=>{bullets.push({x:px+30,y:py+18});}
+document.getElementById('jet').ontouchstart=()=>{if(!gameOver)vy=-10;}
+document.getElementById('jet').ontouchend=()=>{if(!gameOver)vy=3;}
+document.getElementById('fire').onclick=()=>{if(!gameOver)bullets.push({x:px+30,y:py+17});}
+
+// Takkar check karne ka function
+function takkar(a,b){
+  return a.x < b.x + 30 && a.x + 30 > b.x && a.y < b.y + 40 && a.y + 40 > b.y;
+}
 
 function gameLoop(){
+  if(gameOver) return;
+  
   // Player gravity
   py+=vy; if(py>420)py=420; if(py<0)py=0;
   player.style.top=py+'px';
 
-  // Move bullets
+  // Bullet move
   bullets.forEach(b=>b.x+=12);
   bullets=bullets.filter(b=>b.x<500);
 
-  // Spawn enemy
-  if(Math.random()<0.04){ enemies.push({x:450,y:Math.random()*420}); }
-  enemies.forEach(e=>e.x-=4);
-
-  // CHECK COLLISION + SCORE
-  for(let i=enemies.length-1;i>=0;i--){
-    for(let j=bullets.length-1;j>=0;j--){
-      if(bullets[j].x> enemies[i].x && bullets[j].x< enemies[i].x+30 &&
-         bullets[j].y> enemies[i].y && bullets[j].y< enemies[i].y+40){
-        enemies.splice(i,1); // enemy mar gaya
-        bullets.splice(j,1); // goli khatam
-        score+=10;
-        scoreEl.innerText='Score: '+score;
-        break;
-      }
-    }
-  }
-  enemies=enemies.filter(e=>e.x>-50);
-
-  // Draw everything
-  document.querySelectorAll('.bullet,.enemy').forEach(el=>el.remove());
-  bullets.forEach(b=>{let d=document.createElement('div');d.className='bullet';d.style.left=b.x+'px';d.style.top=b.y+'px';game.appendChild(d);});
-  enemies.forEach(e=>{let d=document.createElement('div');d.className='enemy';d.style.left=e.x+'px';d.style.top=e.y+'px';game.appendChild(d);});
-
-  requestAnimationFrame(gameLoop);
-}
-gameLoop();
-</script>
-</body>
-</html>
+  // Enemy spawn
+  if(Math.random()<0.04){ enemies.push({x:
