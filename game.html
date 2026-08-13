@@ -1,128 +1,46 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
-<title>PRO Car Game</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Car Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;font-family:Arial}
-canvas{background:linear-gradient(#333,#000);border:3px solid cyan;border-radius:15px;box-shadow:0 0 30px cyan;margin-top:60px}
-#btns{position:absolute;bottom:30px;display:flex;gap:30px;z-index:5}
-button{width:80px;height:80px;font-size:35px;border-radius:50%;border:3px solid cyan;background:#111;color:cyan}
-#nitro{border-color:orange;color:orange}
-#info{position:absolute;top:15px;color:cyan;font-size:16px;font-weight:bold;text-align:center;width:100%;z-index:5}
-#gameover{position:absolute;color:red;font-size:40px;font-weight:bold;display:none;text-align:center;z-index:5;top:40%}
-#back{position:absolute;top:10px;left:10px;background:cyan;color:black;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;z-index:20}
+body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh}
+canvas{background:#222;border:3px solid cyan;margin-top:50px}
+#btns{position:absolute;bottom:30px;display:flex;gap:30px}
+button{width:70px;height:70px;font-size:30px;border-radius:50%;background:#111;color:cyan;border:2px solid cyan}
+#back{position:absolute;top:10px;left:10px;background:cyan;color:#000;padding:10px;text-decoration:none;border-radius:5px;z-index:99;font-weight:bold}
+#info{position:absolute;top:10px;width:100%;text-align:center;color:cyan;font-size:18px}
 </style>
 </head>
 <body>
-<a id="back" href="index.html" onclick="location.reload()">← Back</a>
-<div id="info">Tap karke sound on karo<br>Score: 0 | Level: 1 | Nitro: 0</div>
-<canvas id="game" width="320" height="550"></canvas>
-<div id="btns">
-  <button id="left">←</button>
-  <button id="nitro">N</button>
-  <button id="right">→</button>
-</div>
-<div id="gameover">GAME OVER<br><span style="font-size:20px;color:white">Reload karo</span></div>
-
+<a id="back" href="index.html">← Back</a>
+<div id="info">Score: 0</div>
+<canvas id="g" width="300" height="500"></canvas>
+<div id="btns"><button onclick="x-=20">←</button><button onclick="x+=20">→</button></div>
 <script>
-const canvas=document.getElementById('game');
-const ctx=canvas.getContext('2d');
-let carX=140, score=0, level=1, gameOver=false, nitro=0, nitroActive=false;
-let enemies=[{x:60,y:-100,type:'police'},{x:200,y:-300,type:'normal'}], speed=3;
-let particles=[];
-let audioCtx;
+let c=document.getElementById('g').getContext('2d'),x=130,y=420,ex=[60,200],ey=[-100,-300],type=['police','normal'],s=0;
+function loop(){
+c.clearRect(0,0,300,500);
+// road
+c.fillStyle='white';for(let i=0;i<500;i+=40)c.fillRect(145,i-s%40,10,20);
 
-function playSound(type){
-  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  const osc=audioCtx.createOscillator();
-  const gain=audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  
-  if(type==='score'){osc.frequency.value=800; gain.gain.value=0.1;}
-  if(type==='nitro'){osc.frequency.value=200; gain.gain.value=0.2;}
-  if(type==='crash'){osc.frequency.value=100; gain.gain.value=0.3;}
-  osc.start(); osc.stop(audioCtx.currentTime+0.2);
+c.fillStyle='red';c.fillRect(x,y,40,80); // Tumhari car
+for(let i=0;i<2;i++){
+ey[i]+=4;
+if(ey[i]>500){ey[i]=-100;ex[i]=Math.random()*260;type[i]=Math.random()<0.5?'police':'normal';s++;document.getElementById('info').innerText='Score: '+s;}
+// Car banayo
+if(type[i]=='police'){
+c.fillStyle='blue';c.fillRect(ex[i],ey[i],40,80);
+c.fillStyle='white';c.font='bold 14px Arial';c.fillText('POLICE',ex[i]+3,ey[i]+50); // YE LINE POLICE LIKHEGI
+}else{
+c.fillStyle='yellow';c.fillRect(ex[i],ey[i],40,80);
 }
-
-document.addEventListener('click',()=>{if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();});
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='ArrowLeft' && carX>15) carX-=25;
-  if(e.key==='ArrowRight' && carX<265) carX+=25;
-  if(e.key===' ' && nitro>0) activateNitro();
-});
-document.getElementById('left').ontouchstart=()=>{if(carX>15) carX-=25;};
-document.getElementById('right').ontouchstart=()=>{if(carX<265) carX+=25;};
-document.getElementById('nitro').ontouchstart=()=>{if(nitro>0) activateNitro();};
-
-function activateNitro(){
-  nitroActive=true; nitro--; speed+=6;
-  playSound('nitro');
-  setTimeout(()=>{nitroActive=false; speed-=6;}, 1200);
+// Takkar
+if(x<ex[i]+40&&x+40>ex[i]&&y<ey[i]+80&&y+80>ey[i]){alert('Game Over! Score:'+s);location.reload();}
 }
-
-function boom(x,y){
-  playSound('crash');
-  for(let i=0;i<25;i++){
-    particles.push({x:x+20,y:y+35,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:40});
-  }
+requestAnimationFrame(loop);
 }
-
-function drawCar(x,y,type){
-  if(type==='police'){
-    ctx.fillStyle='blue'; ctx.fillRect(x,y,40,80);
-    ctx.fillStyle='white'; ctx.font='bold 14px Arial'; // BAHUT BADA
-    ctx.fillText('POLICE', x+3, y+50);
-  }else{
-    ctx.fillStyle='yellow'; ctx.fillRect(x,y,40,80);
-  }
-}
-
-function updateParticles(){
-  particles.forEach(p=>{
-    p.x+=p.vx; p.y+=p.vy; p.life--;
-    ctx.fillStyle='orange';
-    ctx.globalAlpha=p.life/40;
-    ctx.beginPath(); ctx.arc(p.x,p.y,3,0,6.28); ctx.fill();
-  });
-  particles=particles.filter(p=>p.life>0);
-  ctx.globalAlpha=1;
-}
-
-function draw(){
-  if(gameOver) return;
-  ctx.clearRect(0,0,320,550);
-  ctx.fillStyle='#fff';
-  for(let i=0;i<550;i+=40) ctx.fillRect(155,i-score%40,10,20);
-  
-  ctx.fillStyle=nitroActive?'orange':'red'; 
-  ctx.fillRect(carX,480,40,80); // Tumhari car
-  
-  enemies.forEach(e=>{
-    e.y+=speed;
-    if(e.y>550){
-      e.y=-100-Math.random()*150; 
-      e.x=Math.random()*270+15; 
-      e.type = Math.random()<0.5 ? 'police' : 'normal';
-      score++;
-      playSound('score');
-      if(score%5==0){level++; speed+=0.8;}
-      if(Math.random()<0.4) nitro++;
-    }
-    drawCar(e.x,e.y,e.type);
-    
-    if(carX<e.x+40 && carX+40>e.x && 480<e.y+80 && 480+80>e.y){
-      gameOver=true; boom(e.x,e.y);
-      document.getElementById('gameover').style.display='block';
-    }
-  });
-  
-  updateParticles();
-  document.getElementById('info').innerText=`Score: ${score} | Level: ${level} | Nitro: ${nitro}`;
-  requestAnimationFrame(draw);
-}
-draw();
+loop();
 </script>
 </body>
 </html>
