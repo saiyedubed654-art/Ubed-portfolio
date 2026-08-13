@@ -2,17 +2,17 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini Militia Game</title>
+<title>Mini Militia</title>
 <style>
-body{margin:0;background:#87CEEB;overflow:hidden;font-family:sans-serif}
+body{margin:0;background:#000;overflow:hidden}
 #game{width:100%;height:100vh;background:linear-gradient(#87CEEB,#228B22);position:relative}
-.player{position:absolute;width:30px;height:40px;background:orange;border-radius:5px}
-.enemy{position:absolute;width:30px;height:40px;background:red;border-radius:5px}
-.bullet{position:absolute;width:8px;height:4px;background:yellow}
-.btn{position:absolute;bottom:20px;width:60px;height:60px;background:#333;color:white;border-radius:50%;font-size:20px;border:none}
-#fire{right:20px}
-#jet{left:20px}
-#score{position:absolute;top:10px;left:10px;color:white;font-size:20px;font-weight:bold}
+#score{position:absolute;top:10px;left:10px;color:white;font-size:24px;font-weight:bold;z-index:10}
+.player{position:absolute;width:30px;height:40px;background:orange;z-index:5}
+.enemy{position:absolute;width:30px;height:40px;background:red;z-index:5}
+.bullet{position:absolute;width:10px;height:5px;background:yellow;z-index:4}
+.btn{position:absolute;bottom:30px;width:70px;height:70px;background:#222;color:white;border:none;border-radius:50%;font-size:24px}
+#fire{right:30px}
+#jet{left:30px}
 </style>
 </head>
 <body>
@@ -23,76 +23,54 @@ body{margin:0;background:#87CEEB;overflow:hidden;font-family:sans-serif}
   <button class="btn" id="fire">🔫</button>
 </div>
 <script>
-let player = document.getElementById('player');
-let scoreEl = document.getElementById('score');
-let score = 0;
-let px = 100, py = 300, vy = 0;
-let bullets = [];
-let enemies = [];
+let player=document.getElementById('player');
+let scoreEl=document.getElementById('score');
+let score=0, px=80, py=300, vy=3;
+let bullets=[], enemies=[];
 
-player.style.left = px + 'px';
-player.style.top = py + 'px';
+player.style.left=px+'px'; player.style.top=py+'px';
 
-// Jetpack
-document.getElementById('jet').ontouchstart = () => { vy = -8; }
-document.getElementById('jet').ontouchend = () => { vy = 3; }
+// Controls
+document.getElementById('jet').ontouchstart=()=>{vy=-10;}
+document.getElementById('jet').ontouchend=()=>{vy=3;}
+document.getElementById('fire').onclick=()=>{bullets.push({x:px+30,y:py+18});}
 
-// Fire
-document.getElementById('fire').onclick = () => {
-  bullets.push({x:px+30, y:py+18});
-}
+function gameLoop(){
+  // Player gravity
+  py+=vy; if(py>420)py=420; if(py<0)py=0;
+  player.style.top=py+'px';
 
-// Collision check
-function checkCollision(b, e){
-  return b.x < e.x + 30 && b.x + 8 > e.x && b.y < e.y + 40 && b.y + 4 > e.y;
-}
+  // Move bullets
+  bullets.forEach(b=>b.x+=12);
+  bullets=bullets.filter(b=>b.x<500);
 
-// Game Loop
-setInterval(() => {
-  py += vy;
-  if(py > 400) py = 400;
-  if(py < 0) py = 0;
-  player.style.top = py + 'px';
+  // Spawn enemy
+  if(Math.random()<0.04){ enemies.push({x:450,y:Math.random()*420}); }
+  enemies.forEach(e=>e.x-=4);
 
-  // bullets move
-  bullets.forEach(b => b.x += 10);
-  bullets = bullets.filter(b => b.x < 400);
-
-  // enemy spawn
-  if(Math.random() < 0.03){
-    enemies.push({x:400, y:Math.random()*400});
-  }
-  enemies.forEach(e => e.x -= 3);
-
-  // COLLISION + SCORE
-  for(let i=enemies.length-1; i>=0; i--){
-    for(let j=bullets.length-1; j>=0; j--){
-      if(checkCollision(bullets[j], enemies[i])){
-        enemies.splice(i,1); // enemy hatao
-        bullets.splice(j,1); // goli hatao
-        score += 10; // score badhao
-        scoreEl.innerText = 'Score: ' + score;
+  // CHECK COLLISION + SCORE
+  for(let i=enemies.length-1;i>=0;i--){
+    for(let j=bullets.length-1;j>=0;j--){
+      if(bullets[j].x> enemies[i].x && bullets[j].x< enemies[i].x+30 &&
+         bullets[j].y> enemies[i].y && bullets[j].y< enemies[i].y+40){
+        enemies.splice(i,1); // enemy mar gaya
+        bullets.splice(j,1); // goli khatam
+        score+=10;
+        scoreEl.innerText='Score: '+score;
         break;
       }
     }
   }
-  enemies = enemies.filter(e => e.x > 0);
+  enemies=enemies.filter(e=>e.x>-50);
 
-  // draw sab
-  document.querySelectorAll('.bullet,.enemy').forEach(el => el.remove());
-  bullets.forEach(b => {
-    let d = document.createElement('div');
-    d.className = 'bullet';
-    d.style.left = b.x + 'px'; d.style.top = b.y + 'px';
-    document.getElementById('game').appendChild(d);
-  });
-  enemies.forEach(e => {
-    let d = document.createElement('div');
-    d.className = 'enemy';
-    d.style.left = e.x + 'px'; d.style.top = e.y + 'px';
-    document.getElementById('game').appendChild(d);
-  });
-}, 30);
+  // Draw everything
+  document.querySelectorAll('.bullet,.enemy').forEach(el=>el.remove());
+  bullets.forEach(b=>{let d=document.createElement('div');d.className='bullet';d.style.left=b.x+'px';d.style.top=b.y+'px';game.appendChild(d);});
+  enemies.forEach(e=>{let d=document.createElement('div');d.className='enemy';d.style.left=e.x+'px';d.style.top=e.y+'px';game.appendChild(d);});
+
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();
 </script>
 </body>
 </html>
